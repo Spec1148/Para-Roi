@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>¿Me quieres dar un beso?</title>
+  <!-- Librería de confeti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #ffe6eb;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 15px;
+      overflow-x: hidden;
+    }
+
+    .card {
+      background: #ffffff;
+      padding: 2.5rem 2rem;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(255, 105, 180, 0.2);
+      text-align: center;
+      max-width: 420px;
+      width: 100%;
+      position: relative;
+    }
+
+    .heart-container {
+      margin: 15px 0 35px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .heart {
+      background-color: #ff3366;
+      display: inline-block;
+      height: 50px;
+      position: relative;
+      transform: rotate(-45deg);
+      width: 50px;
+      animation: beat 1.2s infinite ease-in-out;
+    }
+
+    .heart:before,
+    .heart:after {
+      content: "";
+      background-color: #ff3366;
+      border-radius: 50%;
+      height: 50px;
+      position: absolute;
+      width: 50px;
+    }
+
+    .heart:before {
+      top: -25px;
+      left: 0;
+    }
+
+    .heart:after {
+      left: 25px;
+      top: 0;
+    }
+
+    @keyframes beat {
+      0%, 100% { transform: scale(1) rotate(-45deg); }
+      50% { transform: scale(1.15) rotate(-45deg); }
+    }
+
+    h1 {
+      color: #d6336c;
+      font-size: 1.5rem;
+      line-height: 1.3;
+      margin-bottom: 1.5rem;
+      min-height: 2.6em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .reaction-img {
+      width: 100%;
+      max-width: 220px;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 15px;
+      margin: 0 auto 18px auto;
+      display: block;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .buttons-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      min-height: 60px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 14px 30px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.2s ease, background-color 0.3s ease;
+      touch-action: manipulation;
+    }
+
+    .btn-yes-style {
+      background-color: #ff4d6d;
+      color: white;
+      box-shadow: 0 4px 15px rgba(255, 77, 109, 0.4);
+    }
+
+    .btn-yes-style:active {
+      transform: scale(0.95);
+    }
+
+    #btn-no {
+      background-color: #adb5bd;
+      color: white;
+      z-index: 10;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .celebration-img {
+      width: 100%;
+      max-width: 280px;
+      border-radius: 15px;
+      margin-top: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 1.8rem 1.2rem;
+      }
+
+      h1 {
+        font-size: 1.3rem;
+      }
+
+      .reaction-img {
+        max-width: 190px;
+        height: 150px;
+      }
+
+      button {
+        padding: 12px 24px;
+        font-size: 1rem;
+      }
+
+      .buttons-container {
+        gap: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Pantalla Principal -->
+  <div id="main-screen" class="card">
+    <div id="heart-box" class="heart-container">
+      <div class="heart"></div>
+    </div>
+    
+    <img id="reaction-image" class="reaction-img hidden" src="" alt="Reacción">
+    
+    <h1 id="question-text">¿Me quieres dar un beso?</h1>
+    
+    <div class="buttons-container">
+      <button id="btn-yes" class="btn-yes-style">¡Sí!</button>
+      <button id="btn-no">No</button>
+    </div>
+  </div>
+
+  <!-- Pantalla de Respuesta Final -->
+  <div id="success-screen" class="card hidden">
+    <h1>¡Yo sabía que le querías dar que sí! 💖</h1>
+    <img src="https://i.pinimg.com/736x/98/6b/1b/986b1b035725a7121b5aac1f5fa276e6.jpg" alt="Celebración" class="celebration-img">
+  </div>
+
+  <script>
+    const btnNo = document.getElementById('btn-no');
+    const btnYes = document.getElementById('btn-yes');
+    const mainScreen = document.getElementById('main-screen');
+    const successScreen = document.getElementById('success-screen');
+    const questionText = document.getElementById('question-text');
+    const reactionImage = document.getElementById('reaction-image');
+    const heartBox = document.getElementById('heart-box');
+
+    let noClickCount = 0;
+    let dodgeCount = 0;
+    const maxDodges = 6;
+
+    // Inicializar Audio Context
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Sonido de error
+    function playErrorSound() {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.3);
+      
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    // Sonido de APROBACIÓN (Doble tono brillante / Chime de éxito)
+    function playApprovalSound() {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const notes = [523.25, 659.25, 783.99]; // Notas Do, Mi, Sol (Tríada mayor alegre)
+      notes.forEach((freq, index) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (index * 0.12));
+
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime + (index * 0.12));
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (index * 0.12) + 0.5);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(audioCtx.currentTime + (index * 0.12));
+        osc.stop(audioCtx.currentTime + (index * 0.12) + 0.5);
+      });
+    }
+
+    // Esquivar botón No
+    function dodgeButton() {
+      if (noClickCount >= 2 && dodgeCount < maxDodges) {
+        dodgeCount++;
+        playErrorSound();
+        
+        const padding = 20;
+        const maxX = window.innerWidth - btnNo.offsetWidth - padding;
+        const maxY = window.innerHeight - btnNo.offsetHeight - padding;
+
+        const randomX = Math.max(padding, Math.random() * maxX);
+        const randomY = Math.max(padding, Math.random() * maxY);
+
+        btnNo.style.position = 'fixed';
+        btnNo.style.left = `${randomX}px`;
+        btnNo.style.top = `${randomY}px`;
+
+        if (dodgeCount === maxDodges) {
+          setTimeout(convertToYes, 300);
+        }
+      }
+    }
+
+    // Eventos de esquiva
+    btnNo.addEventListener('mouseover', dodgeButton);
+    btnNo.addEventListener('touchstart', (e) => {
+      if (noClickCount >= 2 && dodgeCount < maxDodges) {
+        e.preventDefault();
+        dodgeButton();
+      }
+    });
+
+    // Clics en botón No
+    btnNo.addEventListener('click', () => {
+      if (noClickCount === 0) {
+        noClickCount = 1;
+        playErrorSound();
+        heartBox.classList.add('hidden');
+        reactionImage.src = "https://i.pinimg.com/736x/46/b3/ab/46b3ab7eb9f9fcfbc5999e65fd0c3c4f.jpg";
+        reactionImage.classList.remove('hidden');
+        questionText.textContent = "¿Por qué trataste de darle que no? Te daré otro intento";
+      } else if (noClickCount === 1) {
+        noClickCount = 2;
+        playErrorSound();
+        reactionImage.src = "https://i.pinimg.com/736x/e8/48/2b/e8482b7d9128d5282f0ab8aa3d4ef1cb.jpg";
+        questionText.textContent = "Ya no hay más intentos";
+      }
+    });
+
+    // Convertir botón No en Sí
+    function convertToYes() {
+      btnNo.style.position = 'static';
+      btnNo.textContent = "¡Sí!";
+      btnNo.classList.remove('btn-no');
+      btnNo.classList.add('btn-yes-style');
+
+      questionText.textContent = "Ya no hay más intentos... bésame";
+
+      btnNo.removeEventListener('mouseover', dodgeButton);
+      btnNo.addEventListener('click', triggerSuccess);
+    }
+
+    // Evento de victoria al presionar Sí
+    function triggerSuccess() {
+      mainScreen.classList.add('hidden');
+      successScreen.classList.remove('hidden');
+
+      playApprovalSound();
+
+      confetti({
+        particleCount: 140,
+        spread: 85,
+        origin: { y: 0.6 }
+      });
+    }
+
+    btnYes.addEventListener('click', triggerSuccess);
+  </script>
+</body>
+</html>
